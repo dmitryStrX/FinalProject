@@ -13,6 +13,7 @@ import seaborn as sns
 
 # Download latest version
 path = kagglehub.dataset_download("prishasawhney/imdb-dataset-top-2000-movies")
+print(path + '/imdb_top_2000_movies.csv')
 imdb = pd.read_csv(path + '/imdb_top_2000_movies.csv')
 print(imdb.head())
 
