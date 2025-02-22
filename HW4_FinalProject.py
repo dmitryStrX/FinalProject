@@ -5,16 +5,22 @@ import matplotlib
 matplotlib.use('GTK3Agg')  # Or 'Qt5Agg', 'GTK3Agg', etc.
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVR
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
+import tensorflow as tf
+from tensorflow.keras.models import Sequential # type: ignore
+from tensorflow.keras.layers import Dense # type: ignore
 
 # Authenticate
 # kagglehub.login() # This will prompt you for your credentials.
 # We also offer other ways to authenticate (credential file & env variables): https://github.com/Kaggle/kagglehub?tab=readme-ov-file#authenticate
 
 # Download latest version
-path = kagglehub.dataset_download("prishasawhney/imdb-dataset-top-2000-movies")
-print(path + '/imdb_top_2000_movies.csv')
-imdb = pd.read_csv(path + '/imdb_top_2000_movies.csv')
+# path = kagglehub.dataset_download("prishasawhney/imdb-dataset-top-2000-movies")
+
+imdb = pd.read_csv('imdb_top_2000_movies.csv')
 print(imdb.head())
 
 # EDA
@@ -29,11 +35,11 @@ imdb.dropna(inplace=True)
 imdb.drop_duplicates(inplace=True)
 imdb['Genre'] = imdb['Genre'].str.replace(' ','')
 imdb['Genre'] = imdb['Genre'].str.lower()
-imdb['Gross'] = imdb['Gross'].str.replace('$','')
-imdb['Gross'] = imdb['Gross'].str.replace(',','')
-imdb['Gross'] = imdb['Gross'].str.replace('M','')
+imdb['Gross'] = imdb['Gross'].str.replace('$','', regex=False)
+imdb['Gross'] = imdb['Gross'].str.replace(',','', regex=False)
+imdb['Gross'] = imdb['Gross'].str.replace('M','', regex=False)
 imdb['Gross'] = pd.to_numeric(imdb['Gross'])
-imdb['Votes'] = imdb['Votes'].str.replace(',','')
+imdb['Votes'] = imdb['Votes'].str.replace(',','', regex=False)
 imdb['Votes'] = pd.to_numeric(imdb['Votes'])
 imdb['IMDB Rating'] = pd.to_numeric(imdb['IMDB Rating'])
 imdb['Release Year'] = imdb['Release Year'].str.replace('I', '', regex=False)  # Remove "I " specifically
@@ -68,14 +74,12 @@ plt.show()
 plt.pause(0.001)
 
 # Train/Test separation
-from sklearn.model_selection import train_test_split
 X = imdb.drop(['Movie Name', 'Gross'],axis=1)
 X = pd.get_dummies(X, columns=['Cast', 'Director', 'Genre'], prefix=['Cast', 'Director', 'Genre'])
 y = imdb['Gross']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # SVM model training
-from sklearn.svm import SVR
 model_svr = SVR()
 model_svr.fit(X_train, y_train)
 
@@ -85,21 +89,15 @@ mse_svr = mean_squared_error(y_test, y_pred_svr)
 print("Mean Squared Error (SVR):", mse_svr)
 
 # Random forest model training
-from sklearn.ensemble import RandomForestRegressor
 model_rf = RandomForestRegressor()
-model_rf.fit(X_train, y_train) 
+model_rf.fit(X_train, y_train)
 
 # Model evaluation
-from sklearn.metrics import mean_squared_error
 y_pred = model_rf.predict(X_test)
 mse_rf = mean_squared_error(y_test, y_pred)
 print("Mean Squared Error (RF):", mse_rf)
 
 # Nural network based on the data above
-import tensorflow as tf
-from tensorflow.keras.models import Sequential # type: ignore
-from tensorflow.keras.layers import Dense # type: ignore
-
 # Define the model
 model_nn = Sequential([
     Dense(128, activation='relu', input_shape=(X_train.shape[1],)),
